@@ -1,6 +1,1 @@
-{
-    "serialport": {
-        "serialport": "/dev/ttyACM0", 
-        "baudrate": 115200
-    }        
-}
+{}
