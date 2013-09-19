@@ -1,0 +1,6 @@
+{
+    "serialport": {
+        "serialport": "/dev/null", 
+        "baudrate": 115200
+    }
+}

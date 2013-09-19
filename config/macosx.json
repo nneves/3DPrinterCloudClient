@@ -1,0 +1,6 @@
+{
+    "serialport": {
+        "serialport": "/dev/tty.usbmodem621", 
+        "baudrate": 115200
+    }
+}
