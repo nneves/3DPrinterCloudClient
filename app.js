@@ -1,5 +1,5 @@
 // 3D Printer Interface
-// Command line application to stream .gcode files directly to printer just by using ./modules/core.js module
+// Command line application to stream .gcode files directly to printer just by using ./modules/printer.js module
 //
 // demos:
 // 1- send gcode data to printer from file using command line ARGUMENTS
@@ -29,7 +29,7 @@ console.log("[appcmd.js]:config/%s.json: $s", node_env, JSON.stringify(configdat
 
 var fs = require('fs'),
 	path = process.argv[2],
-	printercore = require('./modules/core.js');
+	printer = require('./modules/printer.js');
 
 var	readableStream;
 var readableSize = 4*256;	
@@ -37,15 +37,15 @@ var readableSize = 4*256;
 //------------------------------------------------------------------
 // objects initialization/configuration
 //------------------------------------------------------------------
-printercore.setCbAfterOpenPrinter(delayedmain);
+printer.setCbAfterOpenPrinter(delayedmain);
 
 // try interface without real 3d printer by using /dev/null
-//printercore.setConfigPrinter({serialport: "/dev/null", baudrate: 115200});
-//printercore.setConfigPrinter({serialport: "/dev/tty.usbmodem621", baudrate: 115200});
-//printercore.setConfigPrinter({serialport: "/dev/tty.usbmodem622", baudrate: 115200});
+//printer.setConfigPrinter({serialport: "/dev/null", baudrate: 115200});
+//printer.setConfigPrinter({serialport: "/dev/tty.usbmodem621", baudrate: 115200});
+//printer.setConfigPrinter({serialport: "/dev/tty.usbmodem622", baudrate: 115200});
 
 // or (with 3d printer hardware) - alternative init method with args
-//printercore.initializePrinter({serialport: "/dev/tty.usbmodem621", baudrate: 115200});
+//printer.initializePrinter({serialport: "/dev/tty.usbmodem621", baudrate: 115200});
 
 var spconfig = {};
 
@@ -61,7 +61,7 @@ spconfig.baudrate =
 
 var readableSize = 4*256;
 
-printercore.initialize(spconfig);
+printer.initialize(spconfig);
 
 //------------------------------------------------------------------
 // main
@@ -72,14 +72,14 @@ function delayedmain () {
 }
 
 function main () {
-	console.log("Launching Main();");
+	console.log("Launching app.js");
 	
 	// check if .gcode file is inserted via command line arguments
 	if (path !==undefined ) {
 		readableStream = fs.createReadStream(path, {encoding: 'utf8', highWaterMark : 8});
 		//readableStream.pipe(process.stdout);
-		readableStream.pipe(printercore.iStreamPrinter, {end: false});
-		printercore.oStreamPrinter.pipe(process.stdout);
+		readableStream.pipe(printer.iStreamPrinter, {end: false});
+		printer.oStreamPrinter.pipe(process.stdout);
 
 		readableStream.once('end', function() {
   			console.log('Readable Stream Ended');
@@ -91,7 +91,7 @@ function main () {
 		console.log("Get stream from STDIN pipe...");
 
 		process.stdin.setEncoding('utf8');
-		process.stdin.pipe(printercore.iStreamPrinter, { end: false });
-		printercore.oStreamPrinter.pipe(process.stdout);
+		process.stdin.pipe(printer.iStreamPrinter, { end: false });
+		printer.oStreamPrinter.pipe(process.stdout);
 	}	
 }
