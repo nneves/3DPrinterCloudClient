@@ -327,12 +327,18 @@ jsonStream.on('data', function (dlines) {
 });
 
 iStream.write = function (data) {
+
+  console.log("\r\n");
+  console.log("-----------------------------------------------------");
+  console.log("[Printer]: Print chunck data:");
+  console.log("-----------------------------------------------------");
+  console.log("%s", data); 
     
   	// count number of lines present in the data block
-	var internalcounter = (data.match(/\n/g)||[]).length;
+	var internalcounter = (data.toString().match(/\n/g)||[]).length;
 
 	// split stream data into lines of strings (array)
-	array_block = data.split("\n");
+	array_block = data.toString().split("\n");
 	
 	// pre-adds previous partial line to the new data
 	if (array_block.length > 0)
