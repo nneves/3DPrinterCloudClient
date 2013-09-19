@@ -27,12 +27,15 @@ var node_env =
         "default";
 console.log("[appcmd.js]:config/%s.json: $s", node_env, JSON.stringify(configdata));
 
-var fs = require('fs'),
-	path = process.argv[2],
-	printer = require('./modules/printer.js');
+var fs = require('fs');
+var path = process.argv[2];
+var parser = require('./modules/parser.js');
+var printer = require('./modules/printer.js');
 
 var	readableStream;
 var readableSize = 4*256;	
+
+var transformStream = new parser.GCodeParser({decodeStrings: false, size: 8, highWaterMark: 8});
 
 //------------------------------------------------------------------
 // objects initialization/configuration
@@ -77,8 +80,8 @@ function main () {
 	// check if .gcode file is inserted via command line arguments
 	if (path !==undefined ) {
 		readableStream = fs.createReadStream(path, {encoding: 'utf8', highWaterMark : 8});
-		//readableStream.pipe(process.stdout);
-		readableStream.pipe(printer.iStreamPrinter, {end: false});
+		// READABLE STREAM -> TRANSFORM STREAM -> WRITABLE STREAM 
+		readableStream.pipe(transformStream, {end: false}).pipe(printer.iStreamPrinter, {end: false});
 		printer.oStreamPrinter.pipe(process.stdout);
 
 		readableStream.once('end', function() {
