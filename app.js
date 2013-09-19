@@ -84,15 +84,14 @@ function main () {
 		readableStream.once('end', function() {
   			console.log('Readable Stream Ended');
 		});		
+
+		readableStream.read(readableSize);
 	}
 	else {
 		console.log("Get stream from STDIN pipe...");
-		// http://docs.nodejitsu.com/articles/advanced/streams/how-to-use-stream-pipe
 
-		//process.stdin.setEncoding('utf8');
-		//process.stdin.pipe(printercore.iStreamPrinter, { end: false });
-		//printercore.oStreamPrinter.pipe(process.stdout);
-	}
-
-	readableStream.read(readableSize);	
+		process.stdin.setEncoding('utf8');
+		process.stdin.pipe(printercore.iStreamPrinter, { end: false });
+		printercore.oStreamPrinter.pipe(process.stdout);
+	}	
 }
