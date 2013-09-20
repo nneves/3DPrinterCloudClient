@@ -4,13 +4,13 @@
 //   (GCODE data stream, individual GCODE lines or custom commands)
 // - exports a readable stream to write responses from printer
 
-var config = {serialport: "/dev/ttyACM0", baudrate: 115200},
-	iserialport = require("serialport"),
-	iSerialPort = iserialport.SerialPort, // Serial Port - Localize object constructor
-	spCBAfterOpen = undefined,
-	sp = undefined,
-	spFlagInit = false,
-	emulatedPrinterResponseTime = 50;
+var config = {serialport: "/dev/ttyACM0", baudrate: 115200};
+var	iserialport = require("serialport");
+var	iSerialPort = iserialport.SerialPort; // Serial Port - Localize object constructor
+var	spCBAfterOpen = undefined;
+var	sp = undefined;
+var	spFlagInit = false;
+var	emulatedPrinterResponseTime = 1000;
 
 // module interface stream
 var stream = require('stream');
@@ -18,8 +18,8 @@ var iStream = new stream.Writable({highWaterMark : 8});
 var oStream = new stream.Stream();
 
 // lower level stream - hardware
-var JSONStream = require('json-stream'),
-	jsonStream = new JSONStream();
+var JSONStream = require('json-stream');
+var	jsonStream = new JSONStream();
 
 iStream.writable = true;
 oStream.readble = true;
@@ -128,6 +128,7 @@ function spWrite (dlines) {
 	if (cmd.charAt(cmd.length-1) != '\n')
 		endchar = '\n';
 
+/*
 	// verify if inline comments are present, if so splits data to recover valid gcode
 	var array_cmd = cmd.split(";");
 	if (array_cmd.length > 0) {
@@ -141,6 +142,7 @@ function spWrite (dlines) {
 			return false;
 		}
 	}
+*/	
 
 	if (cmdid > 0)
 		console.log("[printer.js]:spWrite: CMDID[%d]=%s", cmdid, cmd+endchar);
@@ -181,7 +183,7 @@ function spCBResponse (data) {
 	if (data.indexOf("ok") != -1) {
 		lines_counter--;
 
-		console.log('[printer.js]:JSONSTREAM:countlines ', lines_counter);	
+		//console.log('[printer.js]:JSONSTREAM:countlines ', lines_counter);	
 
 		// NOTE: 
 		// printer temperature data will be triggered in the 'ok' switch
@@ -273,12 +275,12 @@ function dataBlockLineTrigger () {
 		
 	// verify if it can 'drain' the iStream
 	if (array_block.length <= blocklinethreshold) {
-		console.log("[printer.js]:dataBlockLineTrigger: array_block.length == 0 => iStream Emit 'Drain'");
+		console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block.length);
 		iStream.emit('drain');
 	}
 	else {
 		// array_block.length > 0 => there are still lines left to send to printer
-		console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData();");
+		console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block.length);
 		// send data line to printer
 		dataBlockSendLineData();
 	}	
@@ -300,17 +302,17 @@ function dataBlockSendLineData () {
     // convert string to json to evaluate if it's a JSON command
     try
     {
-        console.log('TRY JSON PARSE');
+        //console.log('TRY JSON PARSE');
         cmd = JSON.parse(array_block_line);
     }
     catch(e)
     {
         // got a normal GCODE string, put it in a valid JSON object
-        console.log('CATCH JSON PARSE');
+        //console.log('CATCH JSON PARSE');
         cmd = {"gcode": array_block_line};
     }
 
-    console.log("[printer.js]:dataBlockSendLineData: Emit Data to jsonStream: ", cmd);
+    //console.log("[printer.js]:dataBlockSendLineData: Emit Data to jsonStream: ", cmd);
     // printing gcode in slow motion - just for debug and fun :P
     //setTimeout(function () {jsonStream.emit('data', cmd);}, 1000);
     jsonStream.emit('data', cmd);
@@ -318,9 +320,19 @@ function dataBlockSendLineData () {
 
 jsonStream.on('data', function (dlines) {
 	
-	console.log('[printer.js]:JSONSTREAM: ', dlines);
+	/*
+  	console.log("\r\n");
+  	console.log("-----------------------------------------------------");
+	console.log('[printer.js]:JSONSTREAM: ');
+	console.log("-----------------------------------------------------");
+	console.log("%s", dlines);*/
+
  	lines_counter++;
-	console.log('[printer.js]:JSONSTREAM:countlines ', lines_counter);	
+ 	/*
+  	console.log("-----------------------------------------------------");
+	console.log('[printer.js]:JSONSTREAM:countlines: ');	
+  	console.log("-----------------------------------------------------");
+  	console.log("%s", lines_counter); */
 
 	//send gcode data to serial port
 	spWrite(dlines);
@@ -328,18 +340,22 @@ jsonStream.on('data', function (dlines) {
 
 iStream.write = function (data) {
 
+  /*
   console.log("\r\n");
   console.log("-----------------------------------------------------");
   console.log("[Printer]: Print chunck data:");
   console.log("-----------------------------------------------------");
-  console.log("%s", data); 
+  console.log("%s", data); */
     
   	// count number of lines present in the data block
 	var internalcounter = (data.toString().match(/\n/g)||[]).length;
 
-	// split stream data into lines of strings (array)
-	array_block = data.toString().split("\n");
+	// split stream data into lines of strings (array) and adds to current array
+	array_block = array_block.concat(data.toString().split("\n"));
 	
+/*
+NOT REQUIRED, ALREADY IMPLEMENTED BY PARSER !!!
+
 	// pre-adds previous partial line to the new data
 	if (array_block.length > 0)
 		array_block[0] = array_strbuffer + array_block[0];
@@ -356,7 +372,7 @@ iStream.write = function (data) {
 	for (var i=0; i<array_block.length; i++) {
 		console.log("> %s",array_block[i]);
 	}
-
+*/
     // start sending lines to printer
     dataBlockSendLineData();
 	

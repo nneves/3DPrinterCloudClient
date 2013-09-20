@@ -71,7 +71,7 @@ printer.initialize(spconfig);
 //------------------------------------------------------------------
 
 function delayedmain () {
-	setTimeout(main, 2000);
+	setTimeout(main, 5000);
 }
 
 function main () {
@@ -80,14 +80,17 @@ function main () {
 	// check if .gcode file is inserted via command line arguments
 	if (path !==undefined ) {
 		readableStream = fs.createReadStream(path, {encoding: 'utf8', highWaterMark : 8});
+
 		// READABLE STREAM -> TRANSFORM STREAM -> WRITABLE STREAM 
 		readableStream.pipe(transformStream, {end: false}).pipe(printer.iStreamPrinter, {end: false});
 		printer.oStreamPrinter.pipe(process.stdout);
 
+		// READABLE STREAM: end event
 		readableStream.once('end', function() {
   			console.log('Readable Stream Ended');
 		});		
 
+		// trigger READABLE STREAM initial sream
 		readableStream.read(readableSize);
 	}
 	else {
