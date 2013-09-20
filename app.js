@@ -27,13 +27,15 @@ var node_env =
         "default";
 console.log("[appcmd.js]:config/%s.json: $s", node_env, JSON.stringify(configdata));
 
+var printerInitTime = 15000;
+
 var fs = require('fs');
 var path = process.argv[2];
 var parser = require('./modules/parser.js');
 var printer = require('./modules/printer.js');
 
 var	readableStream;
-var readableSize = 4*256;	
+var readableSize = 8*4*256;	
 
 var transformStream = new parser.GCodeParser({decodeStrings: false, size: 8, highWaterMark: 8});
 
@@ -62,8 +64,6 @@ spconfig.baudrate =
 	configdata.serialport.baudrate :
 	115200;
 
-var readableSize = 4*256;
-
 printer.initialize(spconfig);
 
 //------------------------------------------------------------------
@@ -71,7 +71,7 @@ printer.initialize(spconfig);
 //------------------------------------------------------------------
 
 function delayedmain () {
-	setTimeout(main, 5000);
+	setTimeout(main, printerInitTime);
 }
 
 function main () {

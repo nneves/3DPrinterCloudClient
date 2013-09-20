@@ -29,7 +29,7 @@ var array_block = [];
 var array_strbuffer = "";
 var lines_counter = 0;
 var idcmdlist = [];
-var blocklinethreshold = 10;
+var blocklinethreshold = 50;
 
 //------------------------------------------------------------------
 // public functions
