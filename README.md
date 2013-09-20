@@ -24,5 +24,5 @@ node --stack_size=1024 --max_old_space_size=20 --max_new_space_size=2048 --max_e
 NOTES: Cross-Compile libv8.so, Node.js, and SerialPort NPM module:
 https://github.com/paul99/v8m-rb/pull/19#issuecomment-23875964
 
-NOTE2: No NPM available, just install on a Linux/Mac machine and copy 'node_modules' to the embedded system. SerialPort need to be Cross-Compiled (check the link instructions on NOTE)
+NOTE2: No NPM available, just install the modules on a Linux/Mac machine (npm update) and copy 'node_modules' to the embedded system. SerialPort need to be Cross-Compiled (check the link instructions on NOTE)
 
