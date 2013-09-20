@@ -5,7 +5,7 @@ Node.js 3D Printer Cloud Client (early test)
 
 Currently running this as a command line tool to print gcode to 3d printer via node.js.
 
-Testing with node.js 10.0.5 running on a TP-Link WR703N with OpenWrt.
+Testing with node.js v0.10.5 running on a TP-Link WR703N with OpenWrt.
 
 WR703N is higly limited, low CPU and RAM, so it is required to launch node.js with some parameters:
 ```
