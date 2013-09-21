@@ -35,9 +35,9 @@ var parser = require('./modules/parser.js');
 var printer = require('./modules/printer.js');
 
 var	readableStream;
-var readableSize = 8*4*256;	
+var readableSize = 12*4*256;	
 
-var transformStream = new parser.GCodeParser({decodeStrings: false, size: 8, highWaterMark: 8});
+var transformStream = new parser.GCodeParser({decodeStrings: false, size: 255, highWaterMark: 255});
 
 //------------------------------------------------------------------
 // objects initialization/configuration

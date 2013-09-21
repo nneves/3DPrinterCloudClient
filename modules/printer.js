@@ -14,7 +14,7 @@ var	emulatedPrinterResponseTime = 1000;
 
 // module interface stream
 var stream = require('stream');
-var iStream = new stream.Writable({highWaterMark : 8});
+var iStream = new stream.Writable({highWaterMark : 32});
 var oStream = new stream.Stream();
 
 // lower level stream - hardware
@@ -29,7 +29,7 @@ var array_block = [];
 var array_strbuffer = "";
 var lines_counter = 0;
 var idcmdlist = [];
-var blocklinethreshold = 50;
+var blocklinethreshold = 125;
 
 //------------------------------------------------------------------
 // public functions
