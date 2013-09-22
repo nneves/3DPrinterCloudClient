@@ -17,10 +17,6 @@ var stream = require('stream');
 var iStream = new stream.Writable({highWaterMark : 32});
 var oStream = new stream.Stream();
 
-// lower level stream - hardware
-var JSONStream = require('json-stream');
-var	jsonStream = new JSONStream();
-
 iStream.writable = true;
 oStream.readble = true;
 
@@ -128,32 +124,17 @@ function spWrite (dlines) {
 	if (cmd.charAt(cmd.length-1) != '\n')
 		endchar = '\n';
 
-/*
-	// verify if inline comments are present, if so splits data to recover valid gcode
-	var array_cmd = cmd.split(";");
-	if (array_cmd.length > 0) {
-		console.log('[printer.js]: Removing inline comments');
-		cmd = array_cmd[0].trim();
-
-		// check if the command is empty
-		if (cmd.length == 0) {
-			//cmd = " G4 P1"; // do nothing for 1 ms
-			spCBResponse("comment_cmd\n");
-			return false;
-		}
-	}
-*/	
-
+	/*
 	if (cmdid > 0)
 		console.log("[printer.js]:spWrite: CMDID[%d]=%s", cmdid, cmd+endchar);
 	else
 		console.log("[printer.js]:spWrite: %s", cmd+endchar); 
-
+	
 	// add cmdid to response list
 	if (cmdid > 0) {
 		console.log("[printer.js]:Pushing CMDID=%d to response list", cmdid);
 		idcmdlist.push(cmdid);
-	}
+	} */
 
 	// writes data to serialport
 	sp.write(cmd.trim()+endchar);
@@ -178,12 +159,10 @@ function spCBResponse (data) {
 	var idata = data.replace(/\r/g, "");
 		idata = idata.replace(/\n/g, "");
 
-	console.log("[printer.js]:[Board_TX]->[Node.JS_RX]: %s\r\n", idata);
+	//console.log("[printer.js]:[Board_TX]->[Node.JS_RX]: %s\r\n", idata);
    	
 	if (data.indexOf("ok") != -1) {
 		lines_counter--;
-
-		//console.log('[printer.js]:JSONSTREAM:countlines ', lines_counter);	
 
 		// NOTE: 
 		// printer temperature data will be triggered in the 'ok' switch
@@ -210,10 +189,10 @@ function spCBResponse (data) {
 			var rescmd = {"response":idata};
 			if (idcmdlist.length > 0) {
 				rescmd.cmdid = idcmdlist.shift();
-				console.log("[printer.js]:Adding CMDID=%d to response: %s", rescmd.cmdid, JSON.stringify(rescmd));
+				//console.log("[printer.js]:Adding CMDID=%d to response: %s", rescmd.cmdid, JSON.stringify(rescmd));
 			}
 			else {
-				console.log("[printer.js]: SerialPort response: %s", JSON.stringify(rescmd));
+				//console.log("[printer.js]: SerialPort response: %s", JSON.stringify(rescmd));
 			}
 			oStream.emit('data', JSON.stringify(rescmd)+'\r\n\r\n');			
 		}
@@ -224,7 +203,7 @@ function spCBResponse (data) {
 		lines_counter--;
 
 		var rescmd = {"error":idata};
-		console.log("[printer.js]: SerialPort invalid_cmd: %s", JSON.stringify(rescmd));
+		//console.log("[printer.js]: SerialPort invalid_cmd: %s", JSON.stringify(rescmd));
 		oStream.emit('data', JSON.stringify(rescmd)+'\r\n\r\n');		
 
 		// TRIGGERING iStream (datablock) || EventEmitter (dataline)
@@ -234,7 +213,7 @@ function spCBResponse (data) {
 		lines_counter--;
 
 		var rescmd = {"error":idata};
-		console.log("[printer.js]: SerialPort empty_cmd: %s", JSON.stringify(rescmd));
+		//console.log("[printer.js]: SerialPort empty_cmd: %s", JSON.stringify(rescmd));
 		oStream.emit('data', JSON.stringify(rescmd)+'\r\n\r\n');		
 
 		// TRIGGERING iStream (datablock) || EventEmitter (dataline)
@@ -244,7 +223,7 @@ function spCBResponse (data) {
 		lines_counter--;
 
 		var rescmd = {"error":idata};
-		console.log("[printer.js]: SerialPort comment_cmd: %s", JSON.stringify(rescmd));
+		//console.log("[printer.js]: SerialPort comment_cmd: %s", JSON.stringify(rescmd));
 		oStream.emit('data', JSON.stringify(rescmd)+'\r\n\r\n');		
 
 		// TRIGGERING iStream (datablock) || EventEmitter (dataline)
@@ -252,7 +231,7 @@ function spCBResponse (data) {
 	}	
 	else {
 		var rescmd = {"printer":idata};
-		console.log("[printer.js]: SerialPort printer message: %s", JSON.stringify(rescmd));
+		//console.log("[printer.js]: SerialPort printer message: %s", JSON.stringify(rescmd));
 		oStream.emit('data', JSON.stringify(rescmd)+'\r\n\r\n');				
 	}
 };
@@ -275,12 +254,12 @@ function dataBlockLineTrigger () {
 		
 	// verify if it can 'drain' the iStream
 	if (array_block.length <= blocklinethreshold) {
-		console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block.length);
+		//console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block.length);
 		iStream.emit('drain');
 	}
 	else {
-		// array_block.length > 0 => there are still lines left to send to printer
-		console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block.length);
+		// array_block.length > blocklinethreshold => there are still lines left to send to printer
+		//console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block.length);
 		// send data line to printer
 		dataBlockSendLineData();
 	}	
@@ -288,10 +267,10 @@ function dataBlockLineTrigger () {
 
 function dataBlockSendLineData () {
 	
-	console.log("[printer.js]:dataBlockSendLineData");
+	//console.log("[printer.js]:dataBlockSendLineData");
 
 	if (array_block.length == 0) {
-		console.log("[printer.js]:dataBlockSendLineData: array_block.length = 0");
+		//console.log("[printer.js]:dataBlockSendLineData: array_block.length = 0");
 		return;
 	}
 
@@ -312,31 +291,10 @@ function dataBlockSendLineData () {
         cmd = {"gcode": array_block_line};
     }
 
-    //console.log("[printer.js]:dataBlockSendLineData: Emit Data to jsonStream: ", cmd);
-    // printing gcode in slow motion - just for debug and fun :P
-    //setTimeout(function () {jsonStream.emit('data', cmd);}, 1000);
-    jsonStream.emit('data', cmd);
+    // send data to printer
+    lines_counter++;
+    spWrite(cmd);
 };
-
-jsonStream.on('data', function (dlines) {
-	
-	/*
-  	console.log("\r\n");
-  	console.log("-----------------------------------------------------");
-	console.log('[printer.js]:JSONSTREAM: ');
-	console.log("-----------------------------------------------------");
-	console.log("%s", dlines);*/
-
- 	lines_counter++;
- 	/*
-  	console.log("-----------------------------------------------------");
-	console.log('[printer.js]:JSONSTREAM:countlines: ');	
-  	console.log("-----------------------------------------------------");
-  	console.log("%s", lines_counter); */
-
-	//send gcode data to serial port
-	spWrite(dlines);
-});
 
 iStream.write = function (data) {
 
@@ -353,26 +311,6 @@ iStream.write = function (data) {
 	// split stream data into lines of strings (array) and adds to current array
 	array_block = array_block.concat(data.toString().split("\n"));
 	
-/*
-NOT REQUIRED, ALREADY IMPLEMENTED BY PARSER !!!
-
-	// pre-adds previous partial line to the new data
-	if (array_block.length > 0)
-		array_block[0] = array_strbuffer + array_block[0];
-
-	// test if the last line is an incomplete line, if so 
-	// buffers it to be pre-added into the next data block
-	array_strbuffer = "";
-	if (array_block.length > 1) {
-		array_strbuffer = array_block[array_block.length - 1];
-		array_block.splice(array_block.length - 1);
-	}
-
-	console.log("[printer.js]:iStream: Preparing to print Block Data:");
-	for (var i=0; i<array_block.length; i++) {
-		console.log("> %s",array_block[i]);
-	}
-*/
     // start sending lines to printer
     dataBlockSendLineData();
 	
@@ -396,7 +334,6 @@ module.exports = {
 	setConfigPrinter: spSetConfig,
 	setCbAfterOpenPrinter: spSetCbAfterOpen,
 	iStreamPrinter: iStream,
-	oStreamPrinter: oStream,
-	cmdStreamPrinter: jsonStream
+	oStreamPrinter: oStream
 };
 //------------------------------------------------------------------
