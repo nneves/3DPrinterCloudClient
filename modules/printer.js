@@ -278,16 +278,12 @@ function dataBlockSendLineData () {
     var cmd;
     var array_block_line = array_block.shift();
     
-    // convert string to json to evaluate if it's a JSON command
-    try
-    {
-        //console.log('TRY JSON PARSE');
+    // check if command was already warpped in a JSON object
+    if (array_block_line.indexOf('{') >= 0 && array_block_line.indexOf('}') >= 0) {
         cmd = JSON.parse(array_block_line);
     }
-    catch(e)
-    {
+    else {
         // got a normal GCODE string, put it in a valid JSON object
-        //console.log('CATCH JSON PARSE');
         cmd = {"gcode": array_block_line};
     }
 
