@@ -10,7 +10,7 @@ var	iSerialPort = iserialport.SerialPort; // Serial Port - Localize object const
 var	spCBAfterOpen = undefined;
 var	sp = undefined;
 var	spFlagInit = false;
-var	emulatedPrinterResponseTime = 1000;
+var	emulatedPrinterResponseTime = 50;
 
 // module interface stream
 var stream = require('stream');
@@ -21,8 +21,11 @@ iStream.writable = true;
 oStream.readble = true;
 
 // internal auxiliar vars
-var array_block = [];
-var array_strbuffer = "";
+var array_in_use = 1;
+var array_block1 = [];
+var array_block2 = [];
+var lcounter1 = 0;
+var lcounter2 = 0;
 var lines_counter = 0;
 var idcmdlist = [];
 var blocklinethreshold = 125;
@@ -123,13 +126,12 @@ function spWrite (dlines) {
 	var endchar = '';
 	if (cmd.charAt(cmd.length-1) != '\n')
 		endchar = '\n';
-
-	/*
+	
 	if (cmdid > 0)
 		console.log("[printer.js]:spWrite: CMDID[%d]=%s", cmdid, cmd+endchar);
 	else
 		console.log("[printer.js]:spWrite: %s", cmd+endchar); 
-	
+	/*
 	// add cmdid to response list
 	if (cmdid > 0) {
 		console.log("[printer.js]:Pushing CMDID=%d to response list", cmdid);
@@ -253,13 +255,13 @@ function emulatePrinterInitMsg () {
 function dataBlockLineTrigger () {
 		
 	// verify if it can 'drain' the iStream
-	if (array_block.length <= blocklinethreshold) {
-		//console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block.length);
+	if (array_block_length() == blocklinethreshold) {
+		console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block_length());
 		iStream.emit('drain');
 	}
 	else {
-		// array_block.length > blocklinethreshold => there are still lines left to send to printer
-		//console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block.length);
+		// array_block_length() > blocklinethreshold => there are still lines left to send to printer
+		console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block_length());
 		// send data line to printer
 		dataBlockSendLineData();
 	}	
@@ -269,22 +271,25 @@ function dataBlockSendLineData () {
 	
 	//console.log("[printer.js]:dataBlockSendLineData");
 
-	if (array_block.length == 0) {
-		//console.log("[printer.js]:dataBlockSendLineData: array_block.length = 0");
-		return;
+	if (array_block_length() == 0) {
+		console.log("[printer.js]:dataBlockSendLineData: array_block_length() = 0");
+		console.log("[printer.js]:dataBlockSendLineData: SWITCH_ARRAY");
+		array_block_switch();
+		array_block_line_reset();		
 	}
 
     // send data line to the JSON stream
     var cmd;
-    var array_block_line = array_block.shift();
+    var iarray_block_line = array_block_line();
+    array_block_line_increment();
     
     // check if command was already warpped in a JSON object
-    if (array_block_line.indexOf('{') >= 0 && array_block_line.indexOf('}') >= 0) {
-        cmd = JSON.parse(array_block_line);
+    if (iarray_block_line.indexOf('{') >= 0 && iarray_block_line.indexOf('}') >= 0) {
+        cmd = JSON.parse(iarray_block_line);
     }
     else {
         // got a normal GCODE string, put it in a valid JSON object
-        cmd = {"gcode": array_block_line};
+        cmd = {"gcode": iarray_block_line};
     }
 
     // send data to printer
@@ -305,7 +310,9 @@ iStream.write = function (data) {
 	var internalcounter = (data.toString().match(/\n/g)||[]).length;
 
 	// split stream data into lines of strings (array) and adds to current array
-	array_block = array_block.concat(data.toString().split("\n"));
+	//array_block = array_block.concat(data.toString().split("\n"));
+	console.log("[printer.js]:STREAM_WRITE: Setting data to NEXT array_block");
+	set_array_block_next(data.toString().split("\n"));
 	
     // start sending lines to printer
     dataBlockSendLineData();
@@ -322,6 +329,65 @@ iStream.end = function (data) {
   this.emit('close');
 };
 
+function array_block () {
+	if (array_in_use == 1)
+		return array_block1;
+
+	return array_block2;
+}
+
+function set_array_block_next (idata) {
+	if (array_in_use == 1)
+		array_block2 = idata;
+	else
+		array_block1 = idata;
+}
+
+function array_block_counter () {
+	if (array_in_use == 1)
+		return lcounter1;
+
+	return lcounter2;
+}
+
+function array_block_length () {
+	if (array_in_use == 1) {
+		return array_block1.length - lcounter1;
+	}
+	else {
+		return array_block2.length - lcounter2;
+	}
+}
+
+function array_block_switch() {
+	if (array_in_use == 1) {
+		array_in_use = 2;
+	}
+	else {
+		array_in_use = 1;
+	}
+}
+
+function array_block_line () {
+	if (array_in_use == 1)
+		return array_block1[lcounter1];
+
+	return array_block2[lcounter2];
+}
+
+function array_block_line_increment () {
+	if (array_in_use == 1)
+		++lcounter1;
+	else
+		++lcounter2;
+}
+
+function array_block_line_reset () {
+	if (array_in_use == 1)
+		lcounter1 = 0;
+	else
+		lcounter2 = 0;
+}
 //------------------------------------------------------------------
 // export
 //------------------------------------------------------------------
