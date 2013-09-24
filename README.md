@@ -53,6 +53,12 @@ adjust your 3D Printer Serial Port and Speed (use /dev/null to emulate a printer
 }
 ```
 
+- export NODE_ENV variable with the config file name to use (without .json extension) - you can create as much profiles as required:
+
+```
+export NODE_ENV=linux
+```
+
 - launch app:
 
 ```
