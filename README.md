@@ -37,12 +37,13 @@ git clone https://github.com/nneves/3DPrinterCloudClient
 - cd 3DPrinterCloudClient
 - npm update
 - edit one of the configuration profiles:
-```
-$ nano ./config/linux.json
 
+```
+nano ./config/linux.json
 ```
 
 adjust your 3D Printer Serial Port and Speed (use /dev/null to emulate a printer response) 
+
 ```
 {
     "serialport": {
@@ -51,12 +52,15 @@ adjust your 3D Printer Serial Port and Speed (use /dev/null to emulate a printer
     }        
 }
 ```
+
 - launch app:
+
 ```
 $ node app.js ./bin/gcode/smallwheel.gcode
 ```
 
 - or launch 3d printer command line [WIP]:
+
 ```
 $ node app.js
 ```
