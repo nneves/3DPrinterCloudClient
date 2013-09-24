@@ -26,3 +26,39 @@ https://github.com/paul99/v8m-rb/pull/19#issuecomment-23875964
 
 NOTE2: No NPM available, just install the modules on a Linux/Mac machine (npm update) and copy 'node_modules' to the embedded system. SerialPort need to be Cross-Compiled (check the link instructions on NOTE)
 
+
+Damn it, I just want to test this on my Laptop/PC
+-------------------------------------------------
+- Install Node.js and NPM
+- clone this repo: 
+```
+git clone https://github.com/nneves/3DPrinterCloudClient
+```
+- cd 3DPrinterCloudClient
+- npm update
+- edit one of the configuration profiles:
+```
+$ nano ./config/linux.json
+
+```
+
+adjust your 3D Printer Serial Port and Speed (use /dev/null to emulate a printer response) 
+```
+{
+    "serialport": {
+        "serialport": "/dev/ttyACM0", 
+        "baudrate": 115200
+    }        
+}
+```
+- launch app:
+```
+$ node app.js ./bin/gcode/smallwheel.gcode
+```
+
+- or launch 3d printer command line [WIP]:
+```
+$ node app.js
+```
+
+NOTE: This is still in an early h@ck1ng stage, a lot of work on the WR703N memory tunning... WIP!!!
