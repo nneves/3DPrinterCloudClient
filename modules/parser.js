@@ -14,6 +14,7 @@ function GCodeParser(options) {
   this.array_block = [];
   this.array_strbuffer = "";
   //this.lines_counter = 0;
+  this.first_chunck = true;
 }
 
 //------------------------------------------------------------------
@@ -33,6 +34,11 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
   /*
   console.log("-----------------------------------------------------");
   console.log("[Transform]: Found %d lines", internalcounter);
+  console.log("-----------------------------------------------------"); */
+
+  /*
+  console.log("-----------------------------------------------------");
+  console.log("[Transform]: Found %d chars", chunk.length);
   console.log("-----------------------------------------------------"); */
 
   // split stream data into lines of strings (array)
@@ -82,13 +88,6 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
 
   this.push(this.array_block.join('\n'));  
 
-  // now, because we got some extra data, emit this first.
-  /*
-  if(this.array_strbuffer.length !== 0) {
-    console.log("Found incomplete line data (pushing into next chunk): %s", this.array_strbuffer);
-    this.push(this.array_strbuffer);
-  } */
-
   done();
 };
 //------------------------------------------------------------------
@@ -102,13 +101,16 @@ GCodeParser.prototype.normalizeGCode = function(data) {
     return "";
   }
 
-  var gcode = data.toString().trim();
-  if (gcode.length == 0) {
+  var gcode = data.toString();
+  if (gcode.trim().length == 0) {
     return "";
   }  
 
-  // test custom/special case "Cura_SteamEngine" ... splited by ReadableStream without reason!
-  if (gcode.toUpperCase().indexOf("CURA_STEAMENGINE") >= 0) {
+  // check for stream initial micro chunk (8 chars)
+  if (this.first_chunck && gcode.length < 24) {
+    this.first_chunck = false;
+    this.array_strbuffer = gcode;
+    console.log("SPECIAL CASE: %s", gcode);
     return "";
   }
 
