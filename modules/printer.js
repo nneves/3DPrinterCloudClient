@@ -282,9 +282,12 @@ function dataBlockSendLineData () {
     var cmd;
     var iarray_block_line = array_block_line();
     array_block_line_increment();
-    
+
     // check if command was already warpped in a JSON object
-    if (iarray_block_line.indexOf('{') >= 0 && iarray_block_line.indexOf('}') >= 0) {
+    if (typeof iarray_block_line === 'string' && 
+    	iarray_block_line.indexOf('{') >= 0 && 
+    	iarray_block_line.indexOf('}') >= 0) {
+        
         cmd = JSON.parse(iarray_block_line);
     }
     else {
