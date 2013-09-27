@@ -13,8 +13,10 @@ function GCodeParser(options) {
 
   this.array_block = [];
   this.array_strbuffer = "";
-  //this.lines_counter = 0;
+  this.lines_counter = 0;
   this.first_chunck = true;
+  this.warpgcode = true;
+  this.warpcmdid = false;
 }
 
 //------------------------------------------------------------------
@@ -61,10 +63,6 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
   var jsonData;
   for (var i=0; i<this.array_block.length; i++) {
     //console.log("[ %s ]",this.array_block[i]);
-    //jsonData = {'CMD': this.array_block[i]};
-    //this.array_block[i] = JSON.stringify(jsonData);
-
-    //this.array_block[i] = '['+this.array_block[i]+']';
 
     // normalize gcode
     var nGCode = this.normalizeGCode(this.array_block[i]).trim();
@@ -83,7 +81,17 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
       continue;
     }
 
+    if (this.warpgcode) {
+      
+      if (this.warpcmdid)
+        jsonData = {'gcode': nGCode, 'cmdid': this.lines_counter};
+      else 
+        jsonData = {'gcode': nGCode};
+      
+      nGCode = JSON.stringify(jsonData);      
+    }
     this.array_block[i] = nGCode;
+    this.lines_counter++;
   }
 
   this.push(this.array_block.join('\n'));  
