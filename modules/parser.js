@@ -12,6 +12,7 @@ function GCodeParser(options) {
   Transform.call(this, options);
 
   this.array_block = [];
+  this.array_result = [];
   this.array_strbuffer = "";
   this.lines_counter = 0;
   this.first_chunck = true;
@@ -32,7 +33,7 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
   console.log("%s", chunk); */
 
   // count number of lines present in the data block
-  var internalcounter = (chunk.match(/\n/g)||[]).length;
+  // var internalcounter = (chunk.match(/\n/g)||[]).length;
   /*
   console.log("-----------------------------------------------------");
   console.log("[Transform]: Found %d lines", internalcounter);
@@ -49,7 +50,6 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
   // pre-adds previous partial line to the new data
   if (this.array_block.length > 0)
     this.array_block[0] = this.array_strbuffer + this.array_block[0];
-//--> missing else code ???
 
   // test if the last line is an incomplete line, if so 
   // buffers it to be pre-added into the next data block
@@ -67,20 +67,17 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
     // normalize gcode
     var nGCode = this.normalizeGCode(this.array_block[i]).trim();
     if (nGCode.length == 0) {
-      //console.log('[parser.js]: Removing un-normalized gcode line: %s', this.array_block[i]);
-      this.array_block.splice(i,1);
-      --i;
+      //console.log('[parser.js]: Skipping un-normalized gcode line: %s', this.array_block[i]);
       continue;
-    }
+    }    
 
     // validade gcode
     if (this.validateGCode(nGCode) == false) {
-      //console.log('[parser.js]: Removing invalid gcode line: %s', this.array_block[i]);
-      this.array_block.splice(i,1);
-      --i;
+      //console.log('[parser.js]: Skipping invalid gcode line: %s', this.array_block[i]);
       continue;
     }
 
+    //console.log("%s", nGCode);
     if (this.warpgcode) {
       
       if (this.warpcmdid)
@@ -90,11 +87,18 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
       
       nGCode = JSON.stringify(jsonData);      
     }
-    this.array_block[i] = nGCode;
+    //this.array_block[i] = nGCode;
+    this.array_result.push(nGCode);
     this.lines_counter++;
   }
 
-  this.push(this.array_block.join('\n'));  
+ //console.log("%s", this.array_result);
+  //this.push(this.array_block.join('\n'));  
+  this.push(this.array_result.join('\n'));
+
+   // clean arrays 
+  this.array_block.length = 0;
+  this.array_result.length = 0; 
 
   done();
 };
@@ -118,7 +122,7 @@ GCodeParser.prototype.normalizeGCode = function(data) {
   if (this.first_chunck && gcode.length < 24) {
     this.first_chunck = false;
     this.array_strbuffer = gcode;
-    console.log("SPECIAL CASE: %s", gcode);
+    //console.log("SPECIAL CASE: %s", gcode);
     return "";
   }
 
