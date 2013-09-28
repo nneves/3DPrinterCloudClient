@@ -29,6 +29,7 @@ var lcounter2 = 0;
 var lines_counter = 0;
 var idcmdlist = [];
 var blocklinethreshold = 125;
+var flagLowLvlDebug = true;
 
 //------------------------------------------------------------------
 // public functions
@@ -127,10 +128,13 @@ function spWrite (dlines) {
 	if (cmd.charAt(cmd.length-1) != '\n')
 		endchar = '\n';
 	
-	if (cmdid > 0)
-		console.log("[printer.js]:spWrite: CMDID[%d]=%s", cmdid, cmd+endchar);
-	else
-		console.log("[printer.js]:spWrite: %s", cmd+endchar); 
+	if (flagLowLvlDebug == true) {
+		if (cmdid > 0)
+			console.log("[printer.js]:spWrite: CMDID[%d]=%s", cmdid, cmd+endchar);
+		else
+			console.log("[printer.js]:spWrite: %s", cmd+endchar); 
+	}
+	console.log("%s", cmd); 
 	/*
 	// add cmdid to response list
 	if (cmdid > 0) {
@@ -146,7 +150,8 @@ function spWrite (dlines) {
 	if (config.serialport.toUpperCase() === '/DEV/NULL') {
 
 		setTimeout(function () {
-			console.log('[printer.js]: SerialPort simulated callback response (/dev/null): ok\r\n');
+			if (flagLowLvlDebug == true)
+				console.log('[printer.js]: SerialPort simulated callback response (/dev/null): ok\r\n');
 			spCBResponse("ok\n");
 
 		}, emulatedPrinterResponseTime );
@@ -244,9 +249,11 @@ function emulatePrinterInitMsg () {
 	if (config.serialport.toUpperCase() === '/DEV/NULL') {
 
 		setTimeout(function () {
-			console.log('[printer.js]:emulatePrinterInitMsg\r\n');
-			spCBResponse("printer: 3D Printer Initialization Messages\n");
-			spCBResponse("printer: Emulated printer is ready!\n");
+			if (flagLowLvlDebug == true) {
+				console.log('[printer.js]:emulatePrinterInitMsg\r\n');
+				spCBResponse("printer: 3D Printer Initialization Messages\n");
+				spCBResponse("printer: Emulated printer is ready!\n");
+			}
 
 		}, emulatedPrinterResponseTime );
 	}
@@ -256,12 +263,14 @@ function dataBlockLineTrigger () {
 		
 	// verify if it can 'drain' the iStream
 	if (array_block_length() == blocklinethreshold) {
-		console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block_length());
+		if (flagLowLvlDebug == true)
+			console.log("[printer.js]:dataBlockLineTrigger: array_block.length <= blocklinethreshold => iStream Emit 'Drain' [%d]", array_block_length());
 		iStream.emit('drain');
 	}
 	else {
 		// array_block_length() > blocklinethreshold => there are still lines left to send to printer
-		console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block_length());
+		if (flagLowLvlDebug == true)
+			console.log("[printer.js]:dataBlockLineTrigger: LinesCounter>0 => dataBlockSendLineData(); [%d]", array_block_length());
 		// send data line to printer
 		dataBlockSendLineData();
 	}	
@@ -272,8 +281,10 @@ function dataBlockSendLineData () {
 	//console.log("[printer.js]:dataBlockSendLineData");
 
 	if (array_block_length() == 0) {
-		console.log("[printer.js]:dataBlockSendLineData: array_block_length() = 0");
-		console.log("[printer.js]:dataBlockSendLineData: SWITCH_ARRAY");
+		if (flagLowLvlDebug == true) {
+			console.log("[printer.js]:dataBlockSendLineData: array_block_length() = 0");
+			console.log("[printer.js]:dataBlockSendLineData: SWITCH_ARRAY");
+		}
 		array_block_switch();
 		array_block_line_reset();		
 	}
@@ -314,7 +325,7 @@ iStream.write = function (data) {
 
 	// split stream data into lines of strings (array) and adds to current array
 	//array_block = array_block.concat(data.toString().split("\n"));
-	console.log("[printer.js]:STREAM_WRITE: Setting data to NEXT array_block");
+	//console.log("[printer.js]:STREAM_WRITE: Setting data to NEXT array_block");
 	set_array_block_next(data.toString().split("\n"));
 	
     // start sending lines to printer
@@ -355,19 +366,27 @@ function array_block_counter () {
 
 function array_block_length () {
 	if (array_in_use == 1) {
-		return array_block1.length - lcounter1;
+		if (array_block1.length - lcounter1 > 0)
+			return array_block1.length - lcounter1;
+		else
+			return 0;
 	}
 	else {
-		return array_block2.length - lcounter2;
+		if (array_block2.length - lcounter2 > 0)
+			return array_block2.length - lcounter2;
+		else
+			return 0;
 	}
 }
 
 function array_block_switch() {
 	if (array_in_use == 1) {
 		array_in_use = 2;
+		array_block1.length = 0;
 	}
 	else {
 		array_in_use = 1;
+		array_block2.length = 0;
 	}
 }
 
