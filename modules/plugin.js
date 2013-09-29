@@ -62,6 +62,8 @@ module.exports = {
 //------------------------------------------------------------------
 
 //------------------------------------------------------------------
-// sample
-//var plugin = new GCodePlugin({pauseAtLayer: 10});
+// sample:
+// var Plugin = require('./plugin.js').GCodePlugin;
+// var plugin = new Plugin({pauseAtLayer: 10});
+// plugin.processData(gcodedataline);
 //------------------------------------------------------------------
