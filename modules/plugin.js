@@ -15,7 +15,7 @@ GCodePlugin.prototype.processData = function(data) {
   var result = "";
   
   //result += this._pauseAtHeight(data, 0.50);
-  result += this._pauseAtLayer(data, 0);
+  //result += this._pauseAtLayer(data, 0);
   //result += this._pauseAtLayer(data, 5);
   //result += this._pauseAtLayer(data, 10);
   //result += this._pauseAtLayer(data, 15);
