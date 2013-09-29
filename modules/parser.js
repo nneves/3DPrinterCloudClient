@@ -2,6 +2,9 @@ var util = require('util');
 var Transform = require('stream').Transform;
 util.inherits(GCodeParser, Transform);
 
+var Plugin = require('./plugin.js').GCodePlugin;
+var plugin = new Plugin({pauseAtLayer: 10});
+
 //------------------------------------------------------------------
 // Class definition / inheritance
 //------------------------------------------------------------------
@@ -63,6 +66,18 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
   var jsonData;
   for (var i=0; i<this.array_block.length; i++) {
     //console.log("[ %s ]",this.array_block[i]);
+
+    // process gcode via plugin
+    var pGCode = plugin.processData(this.array_block[i]);
+    if (pGCode.length > 0) {
+
+      var plugin_data = pGCode.split("\n");
+      for (var j=0; j<plugin_data.length; j++) {
+        this.array_result.push(plugin_data[j]);
+        this.lines_counter++;
+      }
+      continue;      
+    }
 
     // normalize gcode
     var nGCode = this.normalizeGCode(this.array_block[i]).trim();
