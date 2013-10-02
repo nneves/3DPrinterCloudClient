@@ -37,7 +37,7 @@ var printer = require('./modules/printer.js');
 var	readableStream;
 var readableSize = 12*4*256;	
 
-var transformStream = new parser.GCodeParser({decodeStrings: false, size: 255, highWaterMark: 255});
+var transformStream = new parser.GCodeParser({decodeStrings: false, size: readableSize, highWaterMark: readableSize});
 
 //------------------------------------------------------------------
 // objects initialization/configuration
@@ -81,14 +81,14 @@ function main () {
 	if (path !==undefined ) {
 		readableStream = fs.createReadStream(path, {encoding: 'utf8', highWaterMark : 8});
 
-		// READABLE STREAM -> TRANSFORM STREAM -> WRITABLE STREAM 
-		readableStream.pipe(transformStream, {end: false}).pipe(printer.iStreamPrinter, {end: false});
-		printer.oStreamPrinter.pipe(process.stdout);
-
 		// READABLE STREAM: end event
 		readableStream.once('end', function() {
   			console.log('Readable Stream Ended');
 		});		
+
+		// READABLE STREAM -> TRANSFORM STREAM -> WRITABLE STREAM 
+		readableStream.pipe(transformStream).pipe(printer.iStreamPrinter);
+		printer.oStreamPrinter.pipe(process.stdout);
 
 		// trigger READABLE STREAM initial sream
 		readableStream.read(readableSize);

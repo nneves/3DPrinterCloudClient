@@ -36,11 +36,11 @@ GCodeParser.prototype._transform = function(chunk, encoding, done) {
   console.log("%s", chunk); */
 
   // count number of lines present in the data block
-  // var internalcounter = (chunk.match(/\n/g)||[]).length;
-  /*
+  var internalcounter = (chunk.match(/\n/g)||[]).length;
+  
   console.log("-----------------------------------------------------");
   console.log("[Transform]: Found %d lines", internalcounter);
-  console.log("-----------------------------------------------------"); */
+  console.log("-----------------------------------------------------");
 
   /*
   console.log("-----------------------------------------------------");

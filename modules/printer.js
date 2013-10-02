@@ -258,16 +258,23 @@ function emulatePrinterInitMsg () {
 
 function dataBlockLineTrigger () {
 		
+	if (buffer.isEmpty()) {
+		if (flagLowLvlDebug == true)
+			console.log("[printer.js]:dataBlockLineTrigger: buffer.isEmpty() == true!");
+		iStream.emit('close');		
+		return;
+	}
+
 	// verify if it can 'drain' the iStream
 	if (buffer.getCursorRemaining() == blocklinethreshold) {
 		if (flagLowLvlDebug == true)
-			console.log("[printer.js]:dataBlockLineTrigger: buffer.getCursorRemaining() <= blocklinethreshold => iStream Emit 'Drain' [%d]", buffer.getCursorRemaining());
+			console.log("[printer.js]:dataBlockLineTrigger: buffer.getCursorRemaining() <= blocklinethreshold => iStream Emit 'Drain' [%d/%d]", buffer.getCursorRemaining(), buffer.getTotalNumberLines());
 		iStream.emit('drain');
 	}
 	else {
 		// buffer.getCursorRemaining() > blocklinethreshold => there are still lines left to send to printer
 		if (flagLowLvlDebug == true)
-			console.log("[printer.js]:dataBlockLineTrigger: buffer.getCursorRemaining() => dataBlockSendLineData(); [%d]", buffer.getCursorRemaining());
+			console.log("[printer.js]:dataBlockLineTrigger: buffer.getCursorRemaining() => dataBlockSendLineData(); [%d/%d]", buffer.getCursorRemaining(), buffer.getTotalNumberLines());
 		// send data line to printer
 		dataBlockSendLineData();
 	}	

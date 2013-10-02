@@ -246,7 +246,7 @@ GCodeBuffer.prototype.getCursorData = function() {
   return rdata;
 };
 
-GCodeBuffer.prototype.getCursorRemaining= function() {
+GCodeBuffer.prototype.getCursorRemaining = function() {
 
   // check if buffer is empty, if so set data to current cursor
   if (this.isEmpty()) {
@@ -261,6 +261,27 @@ GCodeBuffer.prototype.getCursorRemaining= function() {
 
   if (this.flagLowLvlDebug)
     console.log("[buffer.js]: Current buffer remaining data: %d", rdatacount);
+
+  return rdatacount;
+};
+
+GCodeBuffer.prototype.getTotalNumberLines = function() {
+
+  // check if buffer is empty, if so set data to current cursor
+  if (this.isEmpty()) {
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Empty Buffer, 0 lines of data");
+    return 0;
+  }
+
+  // calculates the buffer total number of lines currently cached
+  var rdatacount = 0;
+  for (var i=0; i<this.numberSlots; ++i) {
+    rdatacount += this.circularArray[i].getBlockSize();
+  }  
+  
+  if (this.flagLowLvlDebug)
+    console.log("[buffer.js]: Total Number Lines of data: %d", rdatacount);
 
   return rdatacount;
 };
