@@ -31,6 +31,19 @@ var idcmdlist = [];
 var blocklinethreshold = 125;
 var flagLowLvlDebug = true;
 
+/*
+var Buffer = require('./buffer.js').GCodeBuffer;
+var buffer = new Buffer({slots: 10, maxbufferslots: 3});
+buffer.pushData([1,2,3,4,5,6]);
+buffer.pushData(["Hello","World","of","goo"]);
+buffer.pushData(["a","b","c"]);
+buffer.pushData(["d","e","f"]);
+
+var rdata;
+while((rdata=buffer.getCursorData())!= undefined)
+	console.log("[serial.js]: DATA=%s", rdata);
+*/
+
 //------------------------------------------------------------------
 // public functions
 //------------------------------------------------------------------

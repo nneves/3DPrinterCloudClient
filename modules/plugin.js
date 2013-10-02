@@ -1,4 +1,11 @@
 //------------------------------------------------------------------
+// sample:
+// var Plugin = require('./plugin.js').GCodePlugin;
+// var plugin = new Plugin({pauseAtLayer: 10});
+// plugin.processData(gcodedataline);
+//------------------------------------------------------------------
+
+//------------------------------------------------------------------
 // Class definition / inheritance
 //------------------------------------------------------------------
 function GCodePlugin(options) {
@@ -59,11 +66,4 @@ GCodePlugin.prototype._pauseAtLayer = function(data, layer) {
 module.exports = {
   GCodePlugin: GCodePlugin
 };
-//------------------------------------------------------------------
-
-//------------------------------------------------------------------
-// sample:
-// var Plugin = require('./plugin.js').GCodePlugin;
-// var plugin = new Plugin({pauseAtLayer: 10});
-// plugin.processData(gcodedataline);
 //------------------------------------------------------------------
