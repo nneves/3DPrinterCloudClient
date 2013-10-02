@@ -37,8 +37,8 @@ function GCodeBuffer(options) {
     console.log("[buffer.js]: Setting new value for maxBufferSlots: %d", this.maxBufferSlots);
   }
 
-  //this._bufferCursor = 0;
-  this._bufferCursor = 9;
+  this._bufferCursor = 0;
+  this.flagLowLvlDebug = false;
 
   // base definition of the circular buffer and internal object
   this.circularArray = [];
@@ -51,6 +51,10 @@ function GCodeBuffer(options) {
         function() { 
           return this._blockArray.length; 
         },
+      'getBlockSizeRemaining': 
+        function() { 
+          return this._blockArray.length-this._cursor; 
+        },        
       'getBlockData': 
         function() { 
           return this._blockArray;
@@ -125,7 +129,8 @@ GCodeBuffer.prototype.isEmpty = function() {
 
   for (var i=0; i<this.numberSlots; ++i) {
     if (!this.circularArray[i].isBlockDataEmpty()) {
-      console.log("[buffer.js]: Buffer NOT empty!!!");
+      if (this.flagLowLvlDebug)
+        console.log("[buffer.js]: Buffer NOT empty!!!");
       result = false;
       break;
     }
@@ -143,7 +148,8 @@ GCodeBuffer.prototype.isFull = function() {
     }
   }  
   if (counter >= this.maxBufferSlots) {
-    console.log("[buffer.js]: Buffer is full!");
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Buffer is full!");
     result = true;
   }
 
@@ -154,7 +160,8 @@ GCodeBuffer.prototype.pushData = function(idata) {
 
   // check if idata is an 'object' (array)
   if (typeof idata == undefined || typeof idata !=="object") {
-    console.log("[buffer.js]: idata not an OBJECT!");
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: idata not an OBJECT!");
     return false;
   }
   
@@ -164,7 +171,8 @@ GCodeBuffer.prototype.pushData = function(idata) {
 
   // check if buffer is empty, if so set data to current cursor
   if (this.isEmpty()) {
-    console.log("[buffer.js]: Empty Buffer, setting data to current cursor: %d [%s]", this._bufferCursor, "[...]"/*idata*/);
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Empty Buffer, setting data to current cursor: %d [%s]", this._bufferCursor, "[...]"/*idata*/);
     this.circularArray[this._bufferCursor].setBlockData(idata);
   }
   else {
@@ -180,22 +188,26 @@ GCodeBuffer.prototype.pushData = function(idata) {
       // note: if this.maxBufferSlots is near the this.maxBufferSlots there may be a problem overlapping ... you have been warned!!! 
 
       if (this.circularArray[icursor].isBlockDataEmpty()) {
-        console.log("[buffer.js]: Found free buffer at cursor: %d", icursor);
+        if (this.flagLowLvlDebug)
+          console.log("[buffer.js]: Found free buffer at cursor: %d", icursor);
         break;
       }
       else {
-        console.log("[buffer.js]: Buffer at cursor %d currently in use!", icursor);
+        if (this.flagLowLvlDebug)
+          console.log("[buffer.js]: Buffer at cursor %d currently in use!", icursor);
         counter++;
       }
     }
 
     // test if there is a free buffer
     if (counter < this.maxBufferSlots) {
-      console.log("[buffer.js]: Setting data to buffer at cursor: %d [%s]", icursor, "[...]"/*idata*/);
+      if (this.flagLowLvlDebug)
+        console.log("[buffer.js]: Setting data to buffer at cursor: %d [%s]", icursor, "[...]"/*idata*/);
       this.circularArray[icursor].setBlockData(idata);
     }
     else {
-      console.log("[buffer.js]: Failed to get a free buffer: ERROR!");
+      if (this.flagLowLvlDebug)
+        console.log("[buffer.js]: Failed to get a free buffer: ERROR!");
       return false;
     }
   }
@@ -206,7 +218,8 @@ GCodeBuffer.prototype.getCursorData = function() {
 
   // check if buffer is empty, if so set data to current cursor
   if (this.isEmpty()) {
-    console.log("[buffer.js]: Empty Buffer, can not send data");
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Empty Buffer, can not send data");
     return undefined;
   }
   var rdata;
@@ -214,7 +227,8 @@ GCodeBuffer.prototype.getCursorData = function() {
 
   // test if current buffer reached the "EndOfBuffer" mark
   if (this.circularArray[this._bufferCursor].isEndOfCursor()) {
-    console.log("[buffer.js]: Current buffer is now marked as EndOfBuffer! Free buffer block!!!");
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Current buffer is now marked as EndOfBuffer! Free buffer block!!!");
     this.circularArray[this._bufferCursor].resetBlockData();
 
     // increment this._bufferCursor and check if requires adjustment due to circular buffer index
@@ -224,11 +238,31 @@ GCodeBuffer.prototype.getCursorData = function() {
       icursor = icursor - this.numberSlots;
     // note: if this.maxBufferSlots is near the this.maxBufferSlots there may be a problem overlapping ... you have been warned!!!     
 
-    console.log("[buffer.js]: Setting Cursor to %d", this._bufferCursor);
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Setting Cursor to %d", this._bufferCursor);
     this._bufferCursor = icursor;
   }
 
   return rdata;
+};
+
+GCodeBuffer.prototype.getCursorRemaining= function() {
+
+  // check if buffer is empty, if so set data to current cursor
+  if (this.isEmpty()) {
+    if (this.flagLowLvlDebug)
+      console.log("[buffer.js]: Empty Buffer, 0 data remaining in current cursor");
+    return 0;
+  }
+
+  // calculates the buffer remaining data (buffer block relative to current cursor)
+  var rdatacount;
+  rdatacount = this.circularArray[this._bufferCursor].getBlockSizeRemaining();
+
+  if (this.flagLowLvlDebug)
+    console.log("[buffer.js]: Current buffer remaining data: %d", rdatacount);
+
+  return rdatacount;
 };
 //------------------------------------------------------------------
 // export
