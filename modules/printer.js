@@ -25,7 +25,7 @@ var Buffer = require('./buffer.js').GCodeBuffer;
 var buffer = new Buffer({slots: 10, maxbufferslots: 3});
 var lines_counter = 0;
 var idcmdlist = [];
-var blocklinethreshold = 125;
+var blocklinethreshold = 150;
 var flagLowLvlDebug = true;
 
 //------------------------------------------------------------------
@@ -131,7 +131,7 @@ function spWrite (dlines) {
 		else
 			console.log("[printer.js]:spWrite: %s", cmd+endchar); 
 	}
-	console.log("%s", cmd); 
+
 	/*
 	// add cmdid to response list
 	if (cmdid > 0) {
@@ -261,7 +261,7 @@ function dataBlockLineTrigger () {
 	if (buffer.isEmpty()) {
 		if (flagLowLvlDebug == true)
 			console.log("[printer.js]:dataBlockLineTrigger: buffer.isEmpty() == true!");
-		iStream.emit('close');		
+		//iStream.emit('close');
 		return;
 	}
 
@@ -333,8 +333,9 @@ iStream.write = function (data) {
 iStream.end = function (data) {
   // no more writes after end
   // emit "close" (optional)
-  console.log("[printer.js]: Close inputStream!");
-  this.emit('close');
+
+  //console.log("[printer.js]: Close inputStream!");
+  //this.emit('close');
 };
 
 //------------------------------------------------------------------
